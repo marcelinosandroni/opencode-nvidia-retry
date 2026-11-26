@@ -1,0 +1,51 @@
+{
+  "name": "opencode-nvidia-retry",
+  "version": "0.1.0",
+  "description": "OpenCode V2 plugin that retries NVIDIA provider failures indefinitely with capped exponential backoff",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "nvidia",
+    "retry",
+    "backoff",
+    "typescript"
+  ],
+  "homepage": "https://github.com/marcelinosandroni/opencode-nvidia-retry#readme",
+  "bugs": {
+    "url": "https://github.com/marcelinosandroni/opencode-nvidia-retry/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcelinosandroni/opencode-nvidia-retry.git"
+  },
+  "license": "MIT",
+  "author": "Marcelino Sandroni",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "src",
+    "docs"
+  ],
+  "scripts": {
+    "check": "npm run typecheck && npm test",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode/plugin": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.11",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

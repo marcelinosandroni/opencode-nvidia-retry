@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentação do OpenCode V2
+    url: https://opencode.ai/docs/build/plugins/
+    about: Consulte a documentação oficial de plugins antes de reportar problemas de API.
