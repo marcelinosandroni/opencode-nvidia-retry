@@ -9,8 +9,8 @@ As opções são JSON e podem ser fornecidas na entrada `plugins` da configuraç
 | `enabled` | `boolean` | `true` | Quando `false`, nenhum hook ou assinatura de eventos é registrado. |
 | `providerIDs` | `string[]` | `["nvidia"]` | Providers elegíveis. A comparação ignora maiúsculas de minúsculas. |
 | `modelIDs` | `string[]` | `[]` | Modelos elegíveis. Uma lista vazia permite todos. |
-| `errorTypes` | `string[]` | `[]` | Tipos de erro elegíveis. Uma lista vazia permite todos. |
-| `errorMessages` | `string[]` | `["the provider had a problem"]` | Fragmentos obrigatórios na mensagem ou no corpo. `"*"` permite qualquer erro. |
+| `errorTypes` | `string[]` | `["provider.rate-limit", "provider.internal"]` | Tipos de erro elegíveis. Uma lista vazia permite todos. |
+| `errorMessages` | `string[]` | `[]` | Fragmentos obrigatórios na mensagem ou no corpo. Uma lista vazia não aplica filtro de texto; `"*"` permite qualquer texto. |
 | `sessions` | `string[]` | `[]` | Lista inclusiva de IDs de sessão. Uma lista vazia significa todas. |
 | `excludeSessions` | `string[]` | `[]` | Lista excludente de IDs de sessão. |
 | `initialDelay` | `number` | `1000` | Primeiro atraso, em milissegundos. |
@@ -32,7 +32,9 @@ As opções são JSON e podem ser fornecidas na entrada `plugins` da configuraç
 }
 ```
 
-Somente erros NVIDIA cuja mensagem contenha `the provider had a problem` são repetidos.
+Por padrão, somente erros NVIDIA classificados como `provider.rate-limit` ou `provider.internal` são repetidos.
+
+O frontend pode exibir `the provider had a problem`, enquanto o servidor registra o incidente como HTTP 429 (`provider.rate-limit`) ou `provider.internal`. O filtro padrão usa a classificação estruturada do servidor para cobrir ambos os casos.
 
 ## Filtrar modelos
 
@@ -72,10 +74,11 @@ A opção `modelIDs` usa o ID do modelo, sem o ID do provider.
 
 A correspondência de texto é parcial e ignora maiúsculas de minúsculas. A mensagem do erro e o corpo HTTP são verificados.
 
-Para permitir qualquer erro do provider, use:
+Para permitir qualquer erro do provider, remova também a restrição de tipo:
 
 ```json
 {
+  "errorTypes": [],
   "errorMessages": ["*"]
 }
 ```
@@ -151,7 +154,7 @@ Nesse exemplo, os intervalos crescem `5s, 10s, 20s, 30s, 30s...`.
 - Entradas que não são strings são ignoradas nas listas.
 - Uma lista de providers vazia impede qualquer retry.
 - Um `modelIDs` que não seja uma lista impede qualquer retry.
-- Uma lista de mensagens vazia impede qualquer retry; use `"*"` para permitir todos os erros.
+- Uma lista de mensagens vazia não aplica filtro de texto; use `"*"` para permitir qualquer texto dentro dos tipos selecionados.
 
 ## Coexistência com outros plugins
 

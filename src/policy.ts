@@ -1,7 +1,8 @@
 export const HARD_MAX_DELAY = 60_000
 
 export const DEFAULT_PROVIDER_IDS = ["nvidia"]
-export const DEFAULT_ERROR_MESSAGES = ["the provider had a problem"]
+export const DEFAULT_ERROR_TYPES = ["provider.rate-limit", "provider.internal"]
+export const DEFAULT_ERROR_MESSAGES: string[] = []
 
 export type Options = {
   enabled?: boolean
@@ -52,7 +53,7 @@ export function resolveOptions(value: unknown): ResolvedOptions {
   const options = record(value)
   const providerIDs = options.providerIDs === undefined ? DEFAULT_PROVIDER_IDS : strings(options.providerIDs)
   const modelIDs = options.modelIDs === undefined ? undefined : strings(options.modelIDs)
-  const errorTypes = strings(options.errorTypes)
+  const errorTypes = options.errorTypes === undefined ? DEFAULT_ERROR_TYPES : strings(options.errorTypes)
   const errorMessages = options.errorMessages === undefined ? DEFAULT_ERROR_MESSAGES : strings(options.errorMessages)
   const sessions = strings(options.sessions)
   const excludeSessions = strings(options.excludeSessions)
@@ -90,7 +91,7 @@ export function modelMatches(model: ModelRef, options: ResolvedOptions): boolean
 
 export function errorMatches(error: ProviderError, options: ResolvedOptions): boolean {
   if (options.errorTypes.size > 0 && !options.errorTypes.has(error.type.toLowerCase())) return false
-  if (options.errorMessages.size === 0) return false
+  if (options.errorMessages.size === 0) return true
 
   const body = error.response?.body
   const haystack = [error.message, body].filter((item): item is string => typeof item === "string").map((item) => item.toLowerCase())

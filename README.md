@@ -8,8 +8,10 @@ Plugin para **OpenCode V2** que continua tentando erros de provider NVIDIA, incl
 Por padrão, o plugin age somente quando:
 
 - o provider é `nvidia`;
-- a mensagem de erro contém `the provider had a problem`, sem diferenciar maiúsculas de minúsculas;
+- o erro é classificado pelo servidor como `provider.rate-limit` ou `provider.internal`;
 - a sessão não foi excluída pelas opções de escopo.
+
+O cliente móvel pode apresentar esse incidente como `the provider had a problem`. No servidor OpenCode, o mesmo erro costuma aparecer como HTTP 429 (`provider.rate-limit`) ou uma falha interna do endpoint (`provider.internal`). O padrão cobre as duas classificações, sem depender do texto exibido pelo cliente.
 
 Ele não modifica o core do OpenCode e usa apenas APIs públicas de plugin.
 
@@ -66,8 +68,8 @@ A configuração é opcional. Para passar opções, use a forma de objeto:
         "enabled": true,
         "providerIDs": ["nvidia"],
         "modelIDs": [],
-        "errorTypes": [],
-        "errorMessages": ["the provider had a problem"],
+        "errorTypes": ["provider.rate-limit", "provider.internal"],
+        "errorMessages": [],
         "sessions": [],
         "excludeSessions": [],
         "initialDelay": 1000,
@@ -83,8 +85,8 @@ A configuração é opcional. Para passar opções, use a forma de objeto:
 | `enabled` | `boolean` | `true` | Desative com `false` para não registrar nenhum comportamento de retry. |
 | `providerIDs` | `string[]` | `["nvidia"]` | Providers elegíveis. A lista é comparada sem diferenciar maiúsculas de minúsculas. |
 | `modelIDs` | `string[]` | `[]` | Modelos elegíveis. Lista vazia permite todos os modelos dos providers selecionados. |
-| `errorTypes` | `string[]` | `[]` | Tipos de erro elegíveis. Lista vazia permite todos os tipos. |
-| `errorMessages` | `string[]` | `["the provider had a problem"]` | Fragmentos que devem aparecer na mensagem ou no corpo da resposta. Use `"*"` para permitir qualquer erro. |
+| `errorTypes` | `string[]` | `["provider.rate-limit", "provider.internal"]` | Tipos de erro elegíveis. Lista vazia permite todos os tipos. |
+| `errorMessages` | `string[]` | `[]` | Fragmentos que devem aparecer na mensagem ou no corpo da resposta. Lista vazia não aplica filtro de texto; use `"*"` para permitir qualquer texto. |
 | `sessions` | `string[]` | `[]` | Quando não está vazio, somente estes IDs de sessão são afetados. |
 | `excludeSessions` | `string[]` | `[]` | IDs de sessão que nunca serão afetados. |
 | `initialDelay` | `number` | `1000` | Primeiro atraso em milissegundos. |
@@ -135,7 +137,7 @@ Leia [SECURITY.md](SECURITY.md) para detalhes.
 
 ## Limitações
 
-- O erro deve continuar correspondente aos filtros; se a mensagem mudar, o ciclo termina.
+- O erro deve continuar correspondente aos filtros; se a classificação mudar para outro tipo, o ciclo termina.
 - O plugin retoma o último prompt de usuário da sessão. Se ele não existir, não há como reconstruir a requisição.
 - Retry infinito pode consumir quota e gerar custo enquanto o provider estiver indisponível.
 - O teto de um minuto é rígido por requisito de segurança operacional; configure um valor menor se necessário.

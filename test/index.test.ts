@@ -136,7 +136,7 @@ const retryEvent = (overrides: Partial<RetryEvent> = {}): RetryEvent => ({
 })
 
 describe("retry policy", () => {
-  it("uses NVIDIA and the reported provider message by default", () => {
+  it("uses NVIDIA and transient provider error types by default", () => {
     const options = resolveOptions({})
 
     assert.equal(options.enabled, true)
@@ -146,7 +146,11 @@ describe("retry policy", () => {
       errorMatches({ type: "provider.internal", message: "The provider had a problem" }, options),
       true,
     )
-    assert.equal(errorMatches({ type: "provider.internal", message: "another error" }, options), false)
+    assert.equal(
+      errorMatches({ type: "provider.rate-limit", message: "HTTP 429: Too Many Requests" }, options),
+      true,
+    )
+    assert.equal(errorMatches({ type: "provider.auth", message: "another error" }, options), false)
   })
 
   it("supports custom provider, model, error type, and message filters", () => {
@@ -243,7 +247,7 @@ describe("opencode.nvidia-retry", () => {
 
     const event = await harness.retry(
       retryEvent({
-        error: { type: "provider.internal", message: "A different failure" },
+        error: { type: "provider.auth", message: "A different failure" },
       }),
     )
 
@@ -301,7 +305,7 @@ describe("opencode.nvidia-retry", () => {
       type: "session.execution.failed",
       data: {
         sessionID: "ses_example",
-        error: { type: "provider.internal", message: "A different failure" },
+        error: { type: "provider.auth", message: "A different failure" },
       },
     })
 

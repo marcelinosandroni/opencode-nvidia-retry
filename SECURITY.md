@@ -33,4 +33,4 @@ O plugin:
 
 Retry infinito pode continuar consumindo quota enquanto o provider estiver indisponível. Use filtros de provider, modelo, tipo e mensagem, além de `sessions`, para reduzir o escopo.
 
-Uma mudança no texto do erro pode encerrar o ciclo, pois a correspondência padrão exige o fragmento configurado.
+Uma mudança na classificação do erro pode encerrar o ciclo, pois a correspondência padrão exige `provider.rate-limit` ou `provider.internal`.
