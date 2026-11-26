@@ -96,6 +96,14 @@ A configuração é opcional. Para passar opções, use a forma de objeto:
 
 O backoff padrão é `1s, 2s, 4s, 8s, ...`, limitado a `60s`. Não há contagem máxima de tentativas: com os filtros padrão, **qualquer erro** continua sendo repetido até o turno ter sucesso, o usuário interromper ou o modelo ser trocado.
 
+Para encerrar o ciclo em um tipo específico de erro, sem perder o retry dos demais:
+
+```json
+{
+  "excludeErrorTypes": ["permission.rejected"]
+}
+```
+
 Consulte [docs/configuration.md](docs/configuration.md) para precedência, exemplos e regras de validação.
 
 ## Como funciona

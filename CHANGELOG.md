@@ -14,7 +14,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ### Adicionado
 
-- Nova opção `excludeErrorTypes`, com prioridade sobre `errorTypes`, para encerrar o ciclo em tipos específicos (por exemplo, `permission.rejected`).
+- Nova opção `excludeErrorTypes`, com prioridade sobre `errorTypes`, para encerrar o ciclo em tipos específicos (por exemplo, `permission.rejected`, que cobre permissão bloqueada e corrigida).
 - Log de inicialização do plugin com a política efetiva, para confirmar a configuração carregada pelo servidor.
 
 ## [0.1.0] - 2026-11-26

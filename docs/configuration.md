@@ -48,14 +48,16 @@ Para nunca repetir um tipo específico de erro, use `excludeErrorTypes`:
     {
       "package": "github:marcelinosandroni/opencode-nvidia-retry",
       "options": {
-        "excludeErrorTypes": ["permission.rejected", "tool.execution"]
+        "excludeErrorTypes": ["permission.rejected"]
       }
     }
   ]
 }
 ```
 
-Com essa configuração, `permission.rejected` e `tool.execution` encerram o ciclo, enquanto todo o resto continua sendo repetido. A lista tem prioridade sobre `errorTypes`.
+Com essa configuração, `permission.rejected` (permissão negada ou corrigida) encerra o ciclo, enquanto todo o resto continua sendo repetido. A lista tem prioridade sobre `errorTypes`.
+
+O core do OpenCode classifica tanto a permissão bloqueada quanto a permissão corrigida como `permission.rejected`, então uma única entrada cobre os dois casos.
 
 ## Filtrar modelos
 
