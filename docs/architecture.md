@@ -4,6 +4,8 @@
 
 O plugin mantém uma sessão ativa mesmo quando o provider NVIDIA falha com um erro elegível. Não existe uma contagem máxima externa de tentativas.
 
+Por padrão, "elegível" significa **qualquer erro**: o filtro de tipo é vazio (aceita todas as classificações do servidor) e o filtro de texto também. Só o provider NVIDIA e o escopo de sessão restringem o comportamento.
+
 ## Limite do retry nativo
 
 O OpenCode V2 classifica a falha e consulta o hook público `session.retry` antes de agendar a próxima tentativa. Porém, o orçamento nativo do turno é finito. Depois dele, o core conclui a execução e publica `session.execution.failed`.
@@ -26,7 +28,7 @@ Para uma falha elegível, o plugin:
 
 1. valida `enabled` e o escopo da sessão;
 2. valida `providerID` e `modelID`;
-3. valida o tipo e a mensagem do erro;
+3. valida o tipo e a mensagem do erro (sem restrição por padrão);
 4. incrementa o contador de falhas da sessão;
 5. calcula `min(maxDelay, initialDelay * 2 ** (failures - 1))`;
 6. substitui a decisão por `{ retry: true, delay }`.
@@ -45,7 +47,7 @@ ctx.event.subscribe({
 
 Quando recebe `session.execution.failed`, ele:
 
-1. lê o modelo selecionado da sessão;
+1. usa o modelo capturado no hook de retry ou, na falta dele, o modelo selecionado da sessão;
 2. reaplica os filtros de provider, modelo e erro;
 3. lê o contexto público da sessão e localiza o último prompt de usuário;
 4. agenda a retomada depois do backoff;

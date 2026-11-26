@@ -1,14 +1,19 @@
 export const HARD_MAX_DELAY = 60_000
 
 export const DEFAULT_PROVIDER_IDS = ["nvidia"]
-export const DEFAULT_ERROR_TYPES = ["provider.rate-limit", "provider.internal"]
+/** Empty allowlist means every error type is eligible. */
+export const DEFAULT_ERROR_TYPES: string[] = []
+/** Empty message list means no text filter. */
 export const DEFAULT_ERROR_MESSAGES: string[] = []
+/** Empty denylist means no error type is excluded. */
+export const DEFAULT_EXCLUDE_ERROR_TYPES: string[] = []
 
 export type Options = {
   enabled?: boolean
   providerIDs?: string[]
   modelIDs?: string[]
   errorTypes?: string[]
+  excludeErrorTypes?: string[]
   errorMessages?: string[]
   sessions?: string[]
   excludeSessions?: string[]
@@ -22,6 +27,7 @@ export type ResolvedOptions = {
   readonly modelIDs: ReadonlySet<string> | undefined
   readonly modelFilterInvalid: boolean
   readonly errorTypes: ReadonlySet<string>
+  readonly excludeErrorTypes: ReadonlySet<string>
   readonly errorMessages: ReadonlySet<string>
   readonly sessions: ReadonlySet<string>
   readonly excludeSessions: ReadonlySet<string>
@@ -54,6 +60,8 @@ export function resolveOptions(value: unknown): ResolvedOptions {
   const providerIDs = options.providerIDs === undefined ? DEFAULT_PROVIDER_IDS : strings(options.providerIDs)
   const modelIDs = options.modelIDs === undefined ? undefined : strings(options.modelIDs)
   const errorTypes = options.errorTypes === undefined ? DEFAULT_ERROR_TYPES : strings(options.errorTypes)
+  const excludeErrorTypes =
+    options.excludeErrorTypes === undefined ? DEFAULT_EXCLUDE_ERROR_TYPES : strings(options.excludeErrorTypes)
   const errorMessages = options.errorMessages === undefined ? DEFAULT_ERROR_MESSAGES : strings(options.errorMessages)
   const sessions = strings(options.sessions)
   const excludeSessions = strings(options.excludeSessions)
@@ -68,6 +76,7 @@ export function resolveOptions(value: unknown): ResolvedOptions {
     modelIDs: modelIDs === undefined ? undefined : new Set(modelIDs),
     modelFilterInvalid: options.modelIDs !== undefined && !Array.isArray(options.modelIDs),
     errorTypes: new Set(errorTypes.map((item) => item.toLowerCase())),
+    excludeErrorTypes: new Set(excludeErrorTypes.map((item) => item.toLowerCase())),
     errorMessages: new Set(errorMessages),
     sessions: new Set(sessions),
     excludeSessions: new Set(excludeSessions),
@@ -90,7 +99,9 @@ export function modelMatches(model: ModelRef, options: ResolvedOptions): boolean
 }
 
 export function errorMatches(error: ProviderError, options: ResolvedOptions): boolean {
-  if (options.errorTypes.size > 0 && !options.errorTypes.has(error.type.toLowerCase())) return false
+  const type = error.type.toLowerCase()
+  if (options.excludeErrorTypes.has(type)) return false
+  if (options.errorTypes.size > 0 && !options.errorTypes.has(type)) return false
   if (options.errorMessages.size === 0) return true
 
   const body = error.response?.body

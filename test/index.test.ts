@@ -136,21 +136,33 @@ const retryEvent = (overrides: Partial<RetryEvent> = {}): RetryEvent => ({
 })
 
 describe("retry policy", () => {
-  it("uses NVIDIA and transient provider error types by default", () => {
+  it("retries every error type by default", () => {
     const options = resolveOptions({})
 
     assert.equal(options.enabled, true)
     assert.equal(modelMatches({ providerID: "nvidia", id: "any" }, options), true)
     assert.equal(modelMatches({ providerID: "openai", id: "any" }, options), false)
-    assert.equal(
-      errorMatches({ type: "provider.internal", message: "The provider had a problem" }, options),
-      true,
-    )
-    assert.equal(
-      errorMatches({ type: "provider.rate-limit", message: "HTTP 429: Too Many Requests" }, options),
-      true,
-    )
-    assert.equal(errorMatches({ type: "provider.auth", message: "another error" }, options), false)
+    for (const type of [
+      "provider.rate-limit",
+      "provider.internal",
+      "provider.transport",
+      "provider.timeout",
+      "provider.unknown",
+      "provider.no-route",
+      "provider.auth",
+      "permission.rejected",
+      "tool.execution",
+      "unknown",
+    ]) {
+      assert.equal(errorMatches({ type, message: "any failure" }, options), true, type)
+    }
+  })
+
+  it("excludes error types listed in excludeErrorTypes", () => {
+    const options = resolveOptions({ excludeErrorTypes: ["PERMISSION.REJECTED"] })
+
+    assert.equal(errorMatches({ type: "permission.rejected", message: "denied" }, options), false)
+    assert.equal(errorMatches({ type: "provider.rate-limit", message: "HTTP 429" }, options), true)
   })
 
   it("treats an empty message list as no text filter", () => {
@@ -261,8 +273,8 @@ describe("opencode.nvidia-retry", () => {
     await harness.cleanup()
   })
 
-  it("ignores unrelated provider errors", async () => {
-    const harness = await setup()
+  it("ignores errors outside the configured allowlist", async () => {
+    const harness = await setup({ errorTypes: ["provider.internal"] })
 
     const event = await harness.retry(
       retryEvent({
@@ -296,6 +308,40 @@ describe("opencode.nvidia-retry", () => {
     await harness.cleanup()
   })
 
+  it("resumes network failures for the NVIDIA provider", async () => {
+    const harness = await setup({ initialDelay: 1, maxDelay: 1 })
+
+    harness.events.push({
+      type: "session.execution.failed",
+      data: {
+        sessionID: "ses_example",
+        error: { type: "provider.transport", message: "fetch failed: ECONNRESET" },
+      },
+    })
+
+    const call = await harness.prompted
+
+    assert.equal(call.id, "msg_user")
+    await harness.cleanup()
+  })
+
+  it("does not resume excluded error types", async () => {
+    const harness = await setup({ excludeErrorTypes: ["permission.rejected"], initialDelay: 1, maxDelay: 1 })
+
+    harness.events.push({
+      type: "session.execution.failed",
+      data: {
+        sessionID: "ses_example",
+        error: { type: "permission.rejected", message: "denied" },
+      },
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    assert.equal(harness.prompts.length, 0)
+    await harness.cleanup()
+  })
+
   it("cancels a pending resume when the user interrupts the session", async () => {
     const harness = await setup({ initialDelay: 20, maxDelay: 20 })
 
@@ -317,8 +363,8 @@ describe("opencode.nvidia-retry", () => {
     await harness.cleanup()
   })
 
-  it("does not resume unrelated terminal failures", async () => {
-    const harness = await setup({ initialDelay: 1, maxDelay: 1 })
+  it("does not resume terminal failures outside the configured allowlist", async () => {
+    const harness = await setup({ errorTypes: ["provider.internal"], initialDelay: 1, maxDelay: 1 })
 
     harness.events.push({
       type: "session.execution.failed",

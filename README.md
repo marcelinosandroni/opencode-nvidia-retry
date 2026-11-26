@@ -8,10 +8,10 @@ Plugin para **OpenCode V2** que continua tentando erros de provider NVIDIA, incl
 Por padrão, o plugin age somente quando:
 
 - o provider é `nvidia`;
-- o erro é classificado pelo servidor como `provider.rate-limit` ou `provider.internal`;
+- o erro é de qualquer tipo (`provider.*`, rede/transport/timeout, quota, auth, ou qualquer outra classificação do servidor);
 - a sessão não foi excluída pelas opções de escopo.
 
-O cliente móvel pode apresentar esse incidente como `the provider had a problem`. No servidor OpenCode, o mesmo erro costuma aparecer como HTTP 429 (`provider.rate-limit`) ou uma falha interna do endpoint (`provider.internal`). O padrão cobre as duas classificações, sem depender do texto exibido pelo cliente.
+Ou seja: **qualquer falha** em uma sessão NVIDIA é repetida indefinidamente. O cliente móvel pode apresentar o incidente como `the provider had a problem`; no servidor, o mesmo caso aparece como HTTP 429 (`provider.rate-limit`), `provider.internal`, `provider.transport`, `provider.timeout` e assim por diante. O padrão não depende do texto exibido pelo cliente e não ignora nenhuma classificação de erro.
 
 Ele não modifica o core do OpenCode e usa apenas APIs públicas de plugin.
 
@@ -68,7 +68,8 @@ A configuração é opcional. Para passar opções, use a forma de objeto:
         "enabled": true,
         "providerIDs": ["nvidia"],
         "modelIDs": [],
-        "errorTypes": ["provider.rate-limit", "provider.internal"],
+        "errorTypes": [],
+        "excludeErrorTypes": [],
         "errorMessages": [],
         "sessions": [],
         "excludeSessions": [],
@@ -85,14 +86,15 @@ A configuração é opcional. Para passar opções, use a forma de objeto:
 | `enabled` | `boolean` | `true` | Desative com `false` para não registrar nenhum comportamento de retry. |
 | `providerIDs` | `string[]` | `["nvidia"]` | Providers elegíveis. A lista é comparada sem diferenciar maiúsculas de minúsculas. |
 | `modelIDs` | `string[]` | `[]` | Modelos elegíveis. Lista vazia permite todos os modelos dos providers selecionados. |
-| `errorTypes` | `string[]` | `["provider.rate-limit", "provider.internal"]` | Tipos de erro elegíveis. Lista vazia permite todos os tipos. |
+| `errorTypes` | `string[]` | `[]` | Tipos de erro elegíveis. Lista vazia permite todos os tipos. |
+| `excludeErrorTypes` | `string[]` | `[]` | Tipos de erro que nunca são repetidos. Tem prioridade sobre `errorTypes`. |
 | `errorMessages` | `string[]` | `[]` | Fragmentos que devem aparecer na mensagem ou no corpo da resposta. Lista vazia não aplica filtro de texto; use `"*"` para permitir qualquer texto. |
 | `sessions` | `string[]` | `[]` | Quando não está vazio, somente estes IDs de sessão são afetados. |
 | `excludeSessions` | `string[]` | `[]` | IDs de sessão que nunca serão afetados. |
 | `initialDelay` | `number` | `1000` | Primeiro atraso em milissegundos. |
 | `maxDelay` | `number` | `60000` | Teto do atraso em milissegundos. Valores maiores são limitados a `60000`. |
 
-O backoff padrão é `1s, 2s, 4s, 8s, ...`, limitado a `60s`. Não há contagem máxima de tentativas: enquanto o erro continuar correspondendo aos filtros, o plugin tenta novamente.
+O backoff padrão é `1s, 2s, 4s, 8s, ...`, limitado a `60s`. Não há contagem máxima de tentativas: com os filtros padrão, **qualquer erro** continua sendo repetido até o turno ter sucesso, o usuário interromper ou o modelo ser trocado.
 
 Consulte [docs/configuration.md](docs/configuration.md) para precedência, exemplos e regras de validação.
 
@@ -137,7 +139,7 @@ Leia [SECURITY.md](SECURITY.md) para detalhes.
 
 ## Limitações
 
-- O erro deve continuar correspondente aos filtros; se a classificação mudar para outro tipo, o ciclo termina.
+- Com o padrão atual, erros que não são do provider também são repetidos (por exemplo, `permission.rejected` ou `tool.execution`), porque a retomada reexecuta o prompt inteiro. Use `excludeErrorTypes` para barrar os que você não quer repetir.
 - O plugin retoma o último prompt de usuário da sessão. Se ele não existir, não há como reconstruir a requisição.
 - Retry infinito pode consumir quota e gerar custo enquanto o provider estiver indisponível.
 - O teto de um minuto é rígido por requisito de segurança operacional; configure um valor menor se necessário.

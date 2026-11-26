@@ -33,4 +33,6 @@ O plugin:
 
 Retry infinito pode continuar consumindo quota enquanto o provider estiver indisponível. Use filtros de provider, modelo, tipo e mensagem, além de `sessions`, para reduzir o escopo.
 
-Uma mudança na classificação do erro pode encerrar o ciclo, pois a correspondência padrão exige `provider.rate-limit` ou `provider.internal`.
+Por padrão, o plugin não restringe o tipo do erro: qualquer falha de uma sessão NVIDIA é repetida, inclusive falhas de rede, quota, autenticação e erros não relacionados ao provider, como `permission.rejected` ou `tool.execution`. Como a retomada reexecuta o prompt inteiro, esses últimos podem repetir efeitos colaterais de ferramentas. Use `excludeErrorTypes` para encerrar o ciclo nesses casos.
+
+Interromper a sessão ou trocar de modelo encerra o ciclo, assim como um hot reload (o estado de retry vive apenas em memória).

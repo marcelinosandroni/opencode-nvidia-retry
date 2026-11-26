@@ -55,6 +55,7 @@ export default Plugin.define({
       providerIDs: [...options.providerIDs],
       modelIDs: options.modelIDs === undefined ? undefined : [...options.modelIDs],
       errorTypes: [...options.errorTypes],
+      excludeErrorTypes: [...options.excludeErrorTypes],
       errorMessages: [...options.errorMessages],
       initialDelay: options.initialDelay,
       maxDelay: options.maxDelay,
@@ -141,21 +142,21 @@ export default Plugin.define({
       if (state.timer !== undefined) return
 
       const candidate = state.candidate
-      const candidateMatches =
-        candidate !== undefined &&
-        candidate.errorType === error.type &&
-        candidate.errorMessage === error.message
-      let model: ModelRef | undefined = candidateMatches
+      // The candidate comes from the retry hook of the current turn, so it stays the most
+      // reliable attribution of the model even when the terminal error has another shape.
+      let model: ModelRef | undefined = candidate
         ? { providerID: candidate.providerID, id: candidate.modelID }
         : undefined
-      try {
-        const session = await ctx.session.get({ sessionID })
-        if (!model && session.model) model = session.model
-      } catch (cause) {
-        log("warn", "could not read the failed session model", {
-          sessionID,
-          error: cause instanceof Error ? cause.message : String(cause),
-        })
+      if (!model) {
+        try {
+          const session = await ctx.session.get({ sessionID })
+          if (session.model) model = session.model
+        } catch (cause) {
+          log("warn", "could not read the failed session model", {
+            sessionID,
+            error: cause instanceof Error ? cause.message : String(cause),
+          })
+        }
       }
 
       if (!model || !modelMatches(model, options)) return
