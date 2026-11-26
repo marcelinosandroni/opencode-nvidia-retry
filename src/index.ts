@@ -51,6 +51,14 @@ export default Plugin.define({
       log("info", "disabled by configuration")
       return
     }
+    log("info", "enabled", {
+      providerIDs: [...options.providerIDs],
+      modelIDs: options.modelIDs === undefined ? undefined : [...options.modelIDs],
+      errorTypes: [...options.errorTypes],
+      errorMessages: [...options.errorMessages],
+      initialDelay: options.initialDelay,
+      maxDelay: options.maxDelay,
+    })
 
     const states = new Map<string, SessionState>()
     const controller = new AbortController()

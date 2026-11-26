@@ -74,6 +74,8 @@ A opção `modelIDs` usa o ID do modelo, sem o ID do provider.
 
 A correspondência de texto é parcial e ignora maiúsculas de minúsculas. A mensagem do erro e o corpo HTTP são verificados.
 
+O texto `the provider had a problem` é a apresentação do cliente móvel. No servidor, a mesma falha costuma ser classificada como `provider.rate-limit` ou `provider.internal`, por isso o filtro de texto fica vazio por padrão. Use `errorMessages` quando quiser limitar o retry a uma mensagem específica do servidor.
+
 Para permitir qualquer erro do provider, remova também a restrição de tipo:
 
 ```json

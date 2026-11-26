@@ -6,7 +6,14 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
-Nenhuma mudança pendente.
+### Alterado
+
+- O filtro padrão passou a usar a classificação estruturada do servidor (`provider.rate-limit` e `provider.internal`) em vez do texto `the provider had a problem`, que é apenas a apresentação do cliente móvel.
+- Uma lista `errorMessages` vazia deixou de desabilitar o retry e passou a significar "sem filtro de texto".
+
+### Adicionado
+
+- Log de inicialização do plugin com a política efetiva, para confirmar a configuração carregada pelo servidor.
 
 ## [0.1.0] - 2026-11-26
 

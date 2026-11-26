@@ -153,6 +153,25 @@ describe("retry policy", () => {
     assert.equal(errorMatches({ type: "provider.auth", message: "another error" }, options), false)
   })
 
+  it("treats an empty message list as no text filter", () => {
+    const options = resolveOptions({ errorMessages: [] })
+
+    assert.equal(
+      errorMatches({ type: "provider.internal", message: "anything at all" }, options),
+      true,
+    )
+    assert.equal(
+      errorMatches({ type: "provider.rate-limit", message: "HTTP 429", response: { body: "{}" } }, options),
+      true,
+    )
+  })
+
+  it("allows every error when both filters are opened", () => {
+    const options = resolveOptions({ errorTypes: [], errorMessages: ["*"] })
+
+    assert.equal(errorMatches({ type: "provider.auth", message: "invalid key" }, options), true)
+  })
+
   it("supports custom provider, model, error type, and message filters", () => {
     const options = resolveOptions({
       providerIDs: ["NVIDIA"],

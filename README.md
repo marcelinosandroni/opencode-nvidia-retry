@@ -103,7 +103,7 @@ O retry nativo do OpenCode V2 tem uma contagem máxima por turno. Por isso, o pl
 1. Durante o turno atual, o hook `retry` torna a falha correspondente elegível para retry e substitui o atraso pelo backoff exponencial do plugin.
 2. Se o turno chegar a uma falha terminal, o evento `session.execution.failed` agenda uma nova tentativa. O plugin retoma o último prompt durável de usuário com o mesmo ID de mensagem e `delivery: "steer"`.
 
-Reusing the message ID reconciles the existing message instead of duplicating it. A successful execution clears the retry state; user interruption and session deletion also cancel a pending retry.
+Reutilizar o ID da mensagem reconcilia a mensagem existente em vez de duplicá-la. Uma execução bem-sucedida apaga o estado de retry; a interrupção do usuário e a exclusão da sessão também cancelam uma retomada pendente.
 
 ```mermaid
 sequenceDiagram
