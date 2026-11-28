@@ -1,3 +1,5 @@
+> **[Arquivado]** Este plugin mudou para o monorepo **[marcelinosandroni/opencode-plugins](https://github.com/marcelinosandroni/opencode-plugins)** (pacote `packages/nvidia-retry`). Instale de lá: `opencode plugin add "github:marcelinosandroni/opencode-plugins#main::path:packages/nvidia-retry"`.
+
 # OpenCode NVIDIA Retry
 
 [![CI](https://github.com/marcelinosandroni/opencode-nvidia-retry/actions/workflows/ci.yml/badge.svg)](https://github.com/marcelinosandroni/opencode-nvidia-retry/actions/workflows/ci.yml)
